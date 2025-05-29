@@ -1,0 +1,106 @@
+A melhor estratégia entre centralizar os runners em uma conta ou distribuir por conta AWS depende dos seguintes fatores:
+
+
+---
+
+✅ Cenário 1: Conta Central de Runners (Shared runners)
+
+Descrição: Uma conta AWS única roda os runners (via Fargate), que assumem roles em outras contas para executar tarefas.
+
+Vantagens:
+
+Centralização de logs, observabilidade e controle de custo
+
+Economia de infraestrutura (evita duplicar clusters Fargate em cada conta)
+
+Facilidade de gestão e versionamento dos runners
+
+Permite auditoria e rastreabilidade centralizada
+
+Evita a complexidade de configurar pipelines/runners em cada conta
+
+
+Desvantagens:
+
+Maior complexidade de IAM (precisa garantir sts:AssumeRole com trust policies bem definidas)
+
+Necessidade de garantir que os jobs estejam isolados por ambiente (ex: dev, staging, prod)
+
+Risco de acesso excessivo, caso as permissões e roles não sejam bem limitadas
+
+
+Recomendo se:
+
+A organização tem uma estrutura multi-conta bem definida (ex: org-root, dev, prod, security, shared-services)
+
+Vocês usam GitHub Actions e vão gerenciar tudo com OIDC + roles assumidas (com aud:sts.amazonaws.com)
+
+Buscam escalabilidade e reutilização de infraestrutura
+
+
+
+---
+
+✅ Cenário 2: Runners por Conta (Isolados)
+
+Descrição: Cada conta AWS possui seus próprios runners (ex: runners-dev, runners-prod), rodando via Fargate.
+
+Vantagens:
+
+Isolamento total de ambientes (segurança, custo, blast radius)
+
+IAM mais simples: os runners só acessam recursos da própria conta
+
+Atende organizações com autonomia por conta ou time
+
+
+Desvantagens:
+
+Maior custo e duplicação de esforço/infraestrutura
+
+Dificuldade em gerenciar versionamento e atualizações dos runners
+
+Pode complicar rastreamento e monitoramento global
+
+
+Recomendo se:
+
+Contas têm autonomia forte e times diferentes (ex: devops por produto ou por BU)
+
+Riscos de segurança ou compliance demandam isolamento forte
+
+Vocês preferem simplicidade de permissões a custo/eficiência
+
+
+
+---
+
+🔄 Recomendação Final (para OCA)
+
+Para seu caso (estrutura DevOps central, múltiplas contas, OIDC com GitHub Actions), a melhor opção é manter uma conta central de runners (ex: oca-runners) rodando com Fargate + GitHub Actions OIDC.
+
+Complementar com:
+
+Repositório de workflows reutilizáveis
+
+Uso de workflow_call para modularizar jobs
+
+OIDC configurado por ambiente com tags/claims para controlar o sts:AssumeRole
+
+Monitoramento central com CloudWatch Logs/Insights e métrica de execução
+
+
+
+---
+
+Se quiser, posso te ajudar com:
+
+Arquitetura de trust policies entre contas
+
+Template de runners com Fargate auto-escaláveis
+
+Workflow base usando OIDC + Terraform
+
+
+Só mandar que monto pra você.
+
